@@ -1,0 +1,19 @@
+name: Build
+description: "A reusable composite action"
+
+inputs:
+  build:
+    description: "needed run commands"
+    required: true
+  shell:
+    description: "which shell to run command"
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build (Matrix override)
+      shell: ${{ inputs.shell }}
+      env: ${{ matrix.settings.env || fromJSON('{}') }}
+      # working-directory: ${{ matrix.project-folder }}
+      run: ${{ inputs.build }}

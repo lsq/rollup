@@ -29,6 +29,7 @@
       "s390x-unknown-linux-gnu",
       "x86_64-apple-darwin",
       "x86_64-pc-windows-msvc",
+      "x86_64-pc-windows-gnu",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
       "x86_64-unknown-linux-musl",
@@ -89,7 +90,7 @@
     "test:browser": "mocha test/browser/index.js",
     "watch": "rollup --config rollup.config.ts --configPlugin typescript --watch"
   },
-  "repository": "rollup/rollup",
+  "repository": "lsq/rollup",
   "keywords": [
     "modules",
     "bundler",
@@ -100,7 +101,7 @@
   "author": "Rich Harris",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rollup/rollup/issues"
+    "url": "https://github.com/lsq/rollup/issues"
   },
   "homepage": "https://rollupjs.org/",
   "optionalDependencies": {

@@ -5,7 +5,7 @@
   "main": "dist/rollup.browser.js",
   "module": "dist/es/rollup.browser.js",
   "types": "dist/rollup.browser.d.ts",
-  "repository": "rollup/rollup",
+  "repository": "lsq/rollup",
   "keywords": [
     "modules",
     "bundler",
@@ -16,7 +16,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rollup/rollup/issues"
+    "url": "https://github.com/lsq/rollup/issues"
   },
   "homepage": "https://rollupjs.org/",
   "dependencies": {

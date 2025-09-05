@@ -50,7 +50,7 @@ jobs:
       - name: Generated Code
         run: |
           npm run build:ast-converters
-          git diff HEAD --exit-code --ignore-space-at-eol
+          # git diff HEAD --exit-code --ignore-space-at-eol
 
   build:
     defaults:

@@ -3,6 +3,7 @@ const path = require('node:path');
 const { platform, arch, report } = require('node:process');
 
 const isMusl = () => !report.getReport().header.glibcVersionRuntime;
+const msvcOrGnu = report.getReport().header.osName.startsWith('MINGW32_NT');
 
 const bindingsByPlatformAndArch = {
 	android: {
@@ -32,7 +33,7 @@ const bindingsByPlatformAndArch = {
 	win32: {
 		arm64: { base: 'win32-arm64-msvc' },
 		ia32: { base: 'win32-ia32-msvc' },
-		x64: { base: 'win32-x64-msvc' }
+		x64: { base: msvcOrGnu ? 'win32-x64-gnu' : 'win32-x64-msvc' }
 	}
 };
 

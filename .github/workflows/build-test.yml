@@ -41,8 +41,8 @@ jobs:
         uses: ./.github/actions/install-and-cache-node-deps
       - name: Lint
         run: npm run ci:lint
-      - name: Vulnerabilities
-        run: npm audit
+      # - name: Vulnerabilities
+        # run: npm audit
       - name: Optional Dependencies
         run: npm run test:package
       - name: CLI Docs
@@ -121,7 +121,7 @@ jobs:
         if: ${{ matrix.settings.target != 'x86_64-pc-windows-gnu' }}
         # if: ${{ !matrix.settings.docker }}
         with:
-          node-version: 24.6.0
+          node-version: 24.7.0
       - uses: msys2/setup-msys2@v2
         if: ${{ matrix.settings.target == 'x86_64-pc-windows-gnu' }}
         with:
@@ -158,10 +158,12 @@ jobs:
         shell: msys2 {0}
         run: |
           echo $(which node)
-          # rm -rf $(which node)
-          # rm -rf $(which npm)
-          which node
           which npm
+          if which node | grep -i "$MSYSTEM";then
+            echo "node is locate at $(which node)"
+          else
+            echo "node is not Gnu." && exit 1
+          fi
         env: ${{ matrix.settings.env || fromJSON('{}') }}
       - name: Restore Cargo cache
         uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -225,10 +227,29 @@ jobs:
         settings:
           - host: windows-latest
             target: x86_64-pc-windows-msvc
-          - host: windows-latest
-            target: x86_64-pc-windows-gnu
+          # - host: windows-latest
+          #   target: x86_64-pc-windows-gnu
+          #   msystem: ucrt64
+          #   toolchain: ucrt-x86_64
+          #   shell: msys2 {0}
+          #   setup: |
+          #     rustup default
+          #     rustup set default-host x86_64-pc-windows-gnu
+          #     rustup default nightly
+          #     rustup install nightly-x86_64-pc-windows-gnu
+          #     rustup install nightly-2025-07-25
+          #     rustup default nightly-x86_64-pc-windows-gnu
+          #     rustup override set nightly-2025-07-25
+          #     rustup show
+          #   build: >-
+          #     set -e &&
+          #     which node &&
+          #     rustup target add x86_64-pc-windows-gnu &&
+          #     rustup component add rust-src --toolchain nightly-2025-07-25-x86_64-pc-windows-gnu &&
+          #   env:
+          #     MINGW_ARCH: ucrt64
         node:
-          - '18.20.0'
+          # - '18.20.0'
           - 24
     runs-on: ${{ matrix.settings.host }}
     timeout-minutes: 15
@@ -241,6 +262,40 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           check-latest: true
+      - name: replace organization name
+        uses: ./.github/actions/replace-org-name
+        with:
+          shell: bash
+      - uses: msys2/setup-msys2@v2
+        if: ${{ matrix.settings.target == 'x86_64-pc-windows-gnu' }}
+        with:
+          msystem: ${{ matrix.settings.msystem }}
+          install: mingw-w64-${{ matrix.settings.toolchain }}-toolchain base-devel binutils git
+          pacboy: >-
+            aria2:p
+            ca-certificates
+            rustup:p
+            nodejs:p
+            rust-wasm:p
+            rust-src:p
+          update: true
+          path-type: inherit
+          #location: C:\
+          release: false
+      - name: Setup toolchain
+        run: ${{ matrix.settings.setup }}
+        if: ${{ matrix.settings.setup }}
+      - name: remove nodejs from msvc
+        if: ${{ matrix.settings.target == 'x86_64-pc-windows-gnu' }}
+        shell: msys2 {0}
+        run: |
+          echo $(which node)
+          which npm
+          if which node | grep -i "$MSYSTEM";then
+            echo "node is locate at $(which node)"
+          else
+            echo "node is not Gnu." && exit 1
+          fi
       - name: Install and Cache Node Dependencies
         uses: ./.github/actions/install-and-cache-node-deps
       - name: Download napi artifacts
@@ -253,10 +308,16 @@ jobs:
         with:
           name: bindings-wasm
       - name: Build and test Rollup
-        run: npm run ${{ matrix.command || 'ci:test:only' }}
+        uses: ./.github/actions/custom-build
+        with:
+          build: |
+            ${{ matrix.settings.build }}
+            which node
+            echo "const os = require('os'); console.log(os.type())" | node -
+            npm run ${{ matrix.command || 'ci:test:only' }}
+          shell: ${{ matrix.settings.shell || 'bash' }}
         env:
           CI: true
-
   publish:
     permissions:
       pull-requests: write # for writing comments

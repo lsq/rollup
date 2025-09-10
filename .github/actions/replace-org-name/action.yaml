@@ -27,6 +27,14 @@ runs:
             cd ripgrep-14.1.1-x86_64-pc-windows-msvc
             ls && cp rg.exe /usr/bin/ && cd ..
             ;;
+          "darwin")
+            # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            # eval "$(/usr/local/bin/brew shellenv)"
+            brew install ripgrep gnu-sed
+            which gsed
+            export PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+            which sed
+            ;;
           *)
             echo "Unsupported OS: $os"
             exit 1
@@ -34,7 +42,7 @@ runs:
         esac
         pwd && ls
         which rg || exit 1
-        which xargs 
+        which xargs && which sed
         sed -i '2{s/\(rollup\)/@bratel\/\1/};/packageName/{s/@rollup/@bratel/}' package.json
         sed -i '/"name": "rollup"/{s/\(rollup\)/@bratel\/\1/}' package-lock.json
         rg -l --null 'name: .@rollup/' ./

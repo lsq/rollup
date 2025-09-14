@@ -90,12 +90,18 @@ jobs:
             shell: msys2 {0}
             setup: |
               rustup default
+              rustVersion=$(sed -n 's/channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+              rustup install "$rustVersion"
+              echo -------------------
               rustup set default-host x86_64-pc-windows-gnu
-              rustup default nightly
-              rustup install nightly-x86_64-pc-windows-gnu
-              rustup install nightly-2025-07-25
-              rustup default nightly-x86_64-pc-windows-gnu
-              rustup override set nightly-2025-07-25
+              # echo -------------------
+              # rustup default nightly
+              # echo -------------------
+              # rustup install nightly-x86_64-pc-windows-gnu
+              # echo -------------------
+              echo -------------------
+              # rustup default nightly-x86_64-pc-windows-gnu
+              # rustup override set nightly-2025-07-25
               rustup show
             build: >-
               set -e &&
@@ -282,7 +288,7 @@ jobs:
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
-        # shell: bash
+        shell: bash
       - name: remove nodejs from msvc
         if: ${{ matrix.settings.target == 'x86_64-pc-windows-gnu' }}
         shell: msys2 {0}

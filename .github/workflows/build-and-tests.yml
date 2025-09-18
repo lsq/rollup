@@ -84,6 +84,25 @@ jobs:
             target: i686-pc-windows-msvc
           - host: windows-latest
             target: aarch64-pc-windows-msvc
+          - host: windows-latest  
+            target: x86_64-pc-windows-gnu
+            msystem: ucrt64
+            toolchain: ucrt-x86_64
+            shell: msys2 {0}
+            setup: |
+              rustup default
+              rustVersion=$(sed -n 's/channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)
+              rustup install "$rustVersion"
+              rustup set default-host x86_64-pc-windows-gnu
+              rustup show
+            build: >-
+              set -e &&
+              which rustup &&
+              rustup target add x86_64-pc-windows-gnu &&
+              rustup component add rust-src --toolchain nightly-2025-07-25-x86_64-pc-windows-gnu &&
+              npm run build:napi -- --release --target x86_64-pc-windows-gnu
+            env:
+              MINGW_ARCH: ucrt64
 
           # MacOS
           - host: macos-latest
@@ -202,9 +221,22 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Setup Node
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        if: ${{ !matrix.settings.docker }}
+        if: ${{ !matrix.settings.docker && matrix.settings.target != 'x86_64-pc-windows-gnu' }}
         with:
           node-version: 24.8.0
+      - uses: msys2/setup-msys2@v2
+        if: ${{ matrix.settings.target == 'x86_64-pc-windows-gnu' }}
+        with:
+          msystem: ${{ matrix.settings.msystem }}
+          install: mingw-w64-${{ matrix.settings.toolchain }}-toolchain base-devel binutils
+          pacboy: >-
+            rustup:p
+            nodejs:p
+            rust-wasm:p
+            rust-src:p
+          update: true
+          path-type: inherit
+          release: false
       - name: Install Toolchain
         uses: dtolnay/rust-toolchain@stable
         if: ${{ !matrix.settings.docker }}
@@ -256,8 +288,10 @@ jobs:
           options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
           run: ${{ matrix.settings.build }}
       - name: Build (Matrix override)
-        env: ${{ matrix.settings.env || fromJSON('{}') }}
-        run: ${{ matrix.settings.build }}
+        uses: ./.github/actions/custom-build
+        with:
+          build: ${{ matrix.settings.build }}
+          shell: ${{ matrix.settings.shell || 'bash' }}
         if: ${{ !matrix.settings.docker && matrix.settings.build }}
       - name: Build (Classic)
         env: ${{ matrix.settings.env || fromJSON('{}') }}

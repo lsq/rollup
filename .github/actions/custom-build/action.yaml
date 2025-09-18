@@ -1,0 +1,16 @@
+name: Build
+description: "A reusable build action"
+
+inputs:
+  build:
+    required: true
+  shell:
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build (Matrix override)
+      shell: ${{ inputs.shell }}
+      env: ${{ matrix.settings.env || fromJSON('{}') }}
+      run: ${{ inputs.build }}
